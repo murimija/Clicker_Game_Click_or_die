@@ -44,6 +44,20 @@ public class GameController : MonoBehaviour
         StartCoroutine(SpawnButtonInTine());
     }
 
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.Raycast(worldPoint, Vector2.zero);
+
+            if (hit.collider != null)
+            {
+                Debug.Log(hit.collider.name);
+            }
+        }
+    }
+
     IEnumerator SpawnButtonInTine()
     {
         yield return new WaitForSeconds(1);
@@ -60,7 +74,7 @@ public class GameController : MonoBehaviour
             Random.Range(spawnArea.yMin, spawnArea.yMax));
         SetMinMaxSize(spawnVector);
         int attemptToFind = 20;
-        while (Physics2D.OverlapArea(min, max) != null && (attemptToFind > 0))
+        while (Physics2D.OverlapAreaAll(min, max).Length > 1 && (attemptToFind > 0))
         {
             spawnVector.Set(Random.Range(spawnArea.xMin, spawnArea.xMax),
                 Random.Range(spawnArea.yMin, spawnArea.yMax));
@@ -68,7 +82,7 @@ public class GameController : MonoBehaviour
             attemptToFind--;
         }
 
-        if (Physics2D.OverlapArea(min, max) == null)
+        if (Physics2D.OverlapAreaAll(min, max).Length == 1)
         {
             Instantiate(button, spawnVector, Quaternion.identity);
         }
