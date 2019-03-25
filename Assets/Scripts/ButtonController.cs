@@ -1,18 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.SocialPlatforms.Impl;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 public class ButtonController : MonoBehaviour
 {
-    public GameController gameController;
-    public float lifeTime = 3;
-    public GameObject destroyByClick;
-    public GameObject destroyByTime;
-    private Quaternion spawnEffectRotation = Quaternion.identity;
-    private GameObject gameControllerObject;
-    
+    [SerializeField] private GameController gameController;
+    [SerializeField] private GameObject destroyByClick;
+    [SerializeField] private GameObject destroyByTime;
+    [SerializeField] private GameObject gameControllerObject;
 
     void Start()
     {
@@ -28,25 +21,17 @@ public class ButtonController : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        if (lifeTime > 0)
-        {
-            lifeTime -= Time.deltaTime;
-        }
-        
-    }
-
     public void OnMouseDown()
     {
         gameControllerObject.GetComponent<GameController>().ShakeCamera();
         DestructionByClick();
+        Debug.Log("1");
     }
-    
+
     void DestructionByClick()
     {
         Destroy(this.gameObject);
-        Instantiate(destroyByClick, GetComponent<Transform>().position, spawnEffectRotation);
+        Instantiate(destroyByClick, GetComponent<Transform>().position, Quaternion.identity);
         gameController.UpdateScore(50);
         gameController.incremtntSummOfButtons();
     }
@@ -54,7 +39,12 @@ public class ButtonController : MonoBehaviour
     void DestructionByTime()
     {
         Destroy(this.gameObject);
-        Instantiate(destroyByTime, GetComponent<Transform>().position, spawnEffectRotation);
+        Instantiate(destroyByTime, GetComponent<Transform>().position, Quaternion.identity);
         gameController.UpdateScore(-100);
+    }
+
+    private void Update()
+    {
+        Debug.DrawRay(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector3.forward * 10f);
     }
 }

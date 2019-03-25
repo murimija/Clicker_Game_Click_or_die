@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.UI;
 
@@ -18,41 +19,29 @@ public class SpawnArea
 
 public class GameController : MonoBehaviour
 {
-    public GameObject button;
-    public SpawnArea spawnArea;
-    public float spawnWait;
-    public float accelerationFromSumm;
-    Quaternion spawnRotation = Quaternion.identity;
+    [SerializeField] private GameObject button;
+    [SerializeField] private SpawnArea spawnArea;
+    [SerializeField] private float spawnWait;
+    [SerializeField] private float accelerationOfSpawnWait;
+    [SerializeField] private float minSpawnWait;
 
     private float buttonHalfSize;
-    private Vector2 max = new Vector2();
-    private Vector2 min = new Vector2();
+    private Vector2 max;
+    private Vector2 min;
 
     public Text scoreText;
-    private int scoreCounter = 0;
-    private int itemCounter = 0;
-   
+    private int scoreCounter;
+    private int itemCounter;
 
     public Camera mainCamera;
 
     public GameObject sceneChanger;
 
-// Start is called before the first frame update
     void Start()
     {
         buttonHalfSize = (button.GetComponent<CircleCollider2D>().radius) / 2f;
         scoreText.text = scoreCounter.ToString();
         StartCoroutine(SpawnButtonInTine());
-    }
-
-    private void Update()
-    {
-        
-        
-        if (scoreCounter <= -1)
-        {
-            sceneChanger.GetComponent<SceneChanger>().GoToScene("End_menu");
-        }
     }
 
     IEnumerator SpawnButtonInTine()
@@ -81,7 +70,7 @@ public class GameController : MonoBehaviour
 
         if (Physics2D.OverlapArea(min, max) == null)
         {
-            Instantiate(button, spawnVector, spawnRotation);
+            Instantiate(button, spawnVector, Quaternion.identity);
         }
     }
 
@@ -95,10 +84,16 @@ public class GameController : MonoBehaviour
 
     public void UpdateScore(int plusScore)
     {
-        scoreCounter += plusScore + (int)Mathf.Sign(plusScore)*itemCounter * 10;
+        scoreCounter += plusScore + (int) Mathf.Sign(plusScore) * itemCounter * 10;
         scoreText.text = scoreCounter.ToString();
-        if (scoreCounter > SaveScore.maxScore) {
+        if (scoreCounter > SaveScore.maxScore)
+        {
             SaveScore.maxScore = scoreCounter;
+        }
+
+        if (scoreCounter <= -1)
+        {
+            sceneChanger.GetComponent<SceneChanger>().GoToScene("End_menu");
         }
     }
 
@@ -110,9 +105,9 @@ public class GameController : MonoBehaviour
     public void incremtntSummOfButtons()
     {
         itemCounter++;
-        if (spawnWait > 0.25) {
-            spawnWait -= accelerationFromSumm;
+        if (spawnWait > minSpawnWait)
+        {
+            spawnWait -= accelerationOfSpawnWait;
         }
     }
-
 }
