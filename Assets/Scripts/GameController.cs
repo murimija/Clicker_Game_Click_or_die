@@ -20,6 +20,8 @@ public class SpawnArea
 public class GameController : MonoBehaviour
 {
     [SerializeField] private GameObject button;
+    [SerializeField] private GameObject cross;
+    [SerializeField] private Image backGraund;
     [SerializeField] private SpawnArea spawnArea;
     [SerializeField] private float spawnWait;
     [SerializeField] private float accelerationOfSpawnWait;
@@ -30,17 +32,23 @@ public class GameController : MonoBehaviour
     private Vector2 min;
 
     public Text scoreText;
-    private int scoreCounter;
+    private int scoreCounter = 50000;
     private int itemCounter;
 
     public Camera mainCamera;
 
     public GameObject sceneChanger;
+    private Vector3 CrossSpavnPosition;
+
+    private Animator backGraundAnimator;
+    private Animator scoreAnimator;
 
     void Start()
     {
         buttonHalfSize = (button.GetComponent<CircleCollider2D>().radius) / 2f;
         scoreText.text = scoreCounter.ToString();
+        scoreAnimator = scoreText.GetComponent<Animator>();
+        backGraundAnimator = backGraund.GetComponent<Animator>();
         StartCoroutine(SpawnButtonInTine());
     }
 
@@ -51,9 +59,18 @@ public class GameController : MonoBehaviour
             Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             RaycastHit2D hit = Physics2D.Raycast(worldPoint, Vector2.zero);
 
-            if (hit.collider != null)
+            if (hit.collider.tag == "ClickButton")
             {
-                Debug.Log(hit.collider.name);
+                hit.collider.GetComponent<ButtonController>().DestructionByClick();
+                backGraundAnimator.SetTrigger("successfulClick");
+                scoreAnimator.SetTrigger("scoreUp");
+                
+            }
+            else
+            {
+                MissClick();
+                backGraundAnimator.SetTrigger("missClick");
+                scoreAnimator.SetTrigger("scoreDown");
             }
         }
     }
@@ -111,11 +128,6 @@ public class GameController : MonoBehaviour
         }
     }
 
-    public void ShakeCamera()
-    {
-        mainCamera.GetComponent<Animator>().SetTrigger("shake");
-    }
-
     public void incremtntSummOfButtons()
     {
         itemCounter++;
@@ -123,5 +135,17 @@ public class GameController : MonoBehaviour
         {
             spawnWait -= accelerationOfSpawnWait;
         }
+    }
+    
+    public void ShakeCamera()
+    {
+        mainCamera.GetComponent<Animator>().SetTrigger("shake");
+    }
+
+    void MissClick()
+    {
+        CrossSpavnPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        CrossSpavnPosition.z = 0f;
+        Instantiate(cross, CrossSpavnPosition , Quaternion.identity);
     }
 }

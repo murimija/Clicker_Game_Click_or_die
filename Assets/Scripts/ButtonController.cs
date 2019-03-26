@@ -20,18 +20,13 @@ public class ButtonController : MonoBehaviour
             Debug.Log("Cannot find 'GameController' script");
         }
     }
-
-    public void OnMouseDown()
+    
+    public void DestructionByClick()
     {
-        gameControllerObject.GetComponent<GameController>().ShakeCamera();
-        DestructionByClick();
-        Debug.Log("1");
-    }
-
-    void DestructionByClick()
-    {
+        
         Destroy(this.gameObject);
         Instantiate(destroyByClick, GetComponent<Transform>().position, Quaternion.identity);
+        gameController.GetComponent<GameController>().ShakeCamera();
         gameController.UpdateScore(50);
         gameController.incremtntSummOfButtons();
     }
@@ -41,10 +36,5 @@ public class ButtonController : MonoBehaviour
         Destroy(this.gameObject);
         Instantiate(destroyByTime, GetComponent<Transform>().position, Quaternion.identity);
         gameController.UpdateScore(-100);
-    }
-
-    private void Update()
-    {
-        Debug.DrawRay(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector3.forward * 10f);
     }
 }

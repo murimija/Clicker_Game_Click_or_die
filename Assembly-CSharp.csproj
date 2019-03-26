@@ -57,10 +57,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\MissClick.cs" />
     <Compile Include="Assets\Scripts\ButtonController.cs" />
     <Compile Include="Assets\Scripts\DestroyByTime.cs" />
     <Compile Include="Assets\Scripts\GameController.cs" />
+    <Compile Include="Assets\Scripts\MissClick.cs" />
     <Compile Include="Assets\Scripts\SceneChanger.cs" />
     <Compile Include="Assets\Scripts\ShowHighScore.cs" />
     <Compile Include="Assets\Scripts\test.cs" />
