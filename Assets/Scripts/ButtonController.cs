@@ -22,8 +22,7 @@ public class ButtonController : MonoBehaviour
     }
     
     public void DestructionByClick()
-    {
-        
+    {        
         Destroy(this.gameObject);
         Instantiate(destroyByClick, GetComponent<Transform>().position, Quaternion.identity);
         gameController.GetComponent<GameController>().ShakeCamera();

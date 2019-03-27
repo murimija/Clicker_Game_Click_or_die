@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using UnityEngine;
+using UnityEngine.Playables;
 using UnityEngine.Serialization;
 using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.UI;
@@ -26,12 +27,14 @@ public class GameController : MonoBehaviour
     [SerializeField] private float spawnWait;
     [SerializeField] private float accelerationOfSpawnWait;
     [SerializeField] private float minSpawnWait;
+    [SerializeField] public Text scoreText;
+    [SerializeField] public Text hitText;
 
     private float buttonHalfSize;
     private Vector2 max;
     private Vector2 min;
 
-    public Text scoreText;
+
     private int scoreCounter = 50000;
     private int itemCounter;
 
@@ -42,6 +45,8 @@ public class GameController : MonoBehaviour
 
     private Animator backGraundAnimator;
     private Animator scoreAnimator;
+
+    private int extraPoints;
 
     void Start()
     {
@@ -61,18 +66,31 @@ public class GameController : MonoBehaviour
 
             if (hit.collider.tag == "ClickButton")
             {
-                hit.collider.GetComponent<ButtonController>().DestructionByClick();
-                backGraundAnimator.SetTrigger("successfulClick");
-                scoreAnimator.SetTrigger("scoreUp");
-                
+                DestroyButtonByClick(hit.collider);
             }
             else
             {
                 MissClick();
-                backGraundAnimator.SetTrigger("missClick");
-                scoreAnimator.SetTrigger("scoreDown");
             }
         }
+    }
+
+    void DestroyButtonByClick(Collider2D buttonObj)
+    {
+        buttonObj.GetComponent<ButtonController>().DestructionByClick();
+        backGraundAnimator.SetTrigger("successfulClick");
+        scoreAnimator.SetTrigger("scoreUp");
+    }
+
+    void MissClick()
+    {
+        CrossSpavnPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        CrossSpavnPosition.z = 0f;
+        Instantiate(cross, CrossSpavnPosition, Quaternion.identity);
+        backGraundAnimator.SetTrigger("missClick");
+        scoreAnimator.SetTrigger("scoreDown");
+        UpdateScore(-50);
+        extraPoints = 0;
     }
 
     IEnumerator SpawnButtonInTine()
@@ -84,6 +102,7 @@ public class GameController : MonoBehaviour
             yield return new WaitForSeconds(spawnWait);
         }
     }
+
 
     void SpawnButton()
     {
@@ -113,10 +132,29 @@ public class GameController : MonoBehaviour
         min.y = vector.y - buttonHalfSize;
     }
 
+    void ExtraPointsTextUpdate()
+    {
+        hitText.GetComponent<Animator>().SetTrigger("updete");
+        hitText.text = "Extra\npoints\n<size=50>" + extraPoints + "</size>";
+    }
+
     public void UpdateScore(int plusScore)
     {
-        scoreCounter += plusScore + (int) Mathf.Sign(plusScore) * itemCounter * 10;
+        if (plusScore < 0)
+        {
+            scoreCounter += plusScore - itemCounter * 10;
+            extraPoints = 0;
+            ExtraPointsTextUpdate();
+        }
+        else
+        {
+            scoreCounter += plusScore + extraPoints;
+            extraPoints += 50;
+            ExtraPointsTextUpdate();
+        }
+
         scoreText.text = scoreCounter.ToString();
+
         if (scoreCounter > SaveScore.maxScore)
         {
             SaveScore.maxScore = scoreCounter;
@@ -131,21 +169,15 @@ public class GameController : MonoBehaviour
     public void incremtntSummOfButtons()
     {
         itemCounter++;
+
         if (spawnWait > minSpawnWait)
         {
             spawnWait -= accelerationOfSpawnWait;
         }
     }
-    
+
     public void ShakeCamera()
     {
         mainCamera.GetComponent<Animator>().SetTrigger("shake");
-    }
-
-    void MissClick()
-    {
-        CrossSpavnPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        CrossSpavnPosition.z = 0f;
-        Instantiate(cross, CrossSpavnPosition , Quaternion.identity);
     }
 }
