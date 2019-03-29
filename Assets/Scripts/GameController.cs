@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Timers;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Serialization;
@@ -20,7 +21,7 @@ public class SpawnArea
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] private GameObject button;
+    [SerializeField] private ButtonController button;
     [SerializeField] private GameObject cross;
     [SerializeField] private Image backGraund;
     [SerializeField] private SpawnArea spawnArea;
@@ -33,20 +34,21 @@ public class GameController : MonoBehaviour
     private float buttonHalfSize;
     private Vector2 max;
     private Vector2 min;
+    private Vector2 ButtonSpavnPosition;
 
-
-    private int scoreCounter = 50000;
+    private int scoreCounter = 200;
     private int itemCounter;
 
     public Camera mainCamera;
 
     public GameObject sceneChanger;
-    private Vector3 CrossSpavnPosition;
+    private Vector3 CrossSpawnPosition;
 
     private Animator backGraundAnimator;
     private Animator scoreAnimator;
 
     private int extraPoints;
+    private bool isGameContinue = true;
 
     void Start()
     {
@@ -61,66 +63,65 @@ public class GameController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            RaycastHit2D hit = Physics2D.Raycast(worldPoint, Vector2.zero);
+            RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
             if (hit.collider.tag == "ClickButton")
-            {
-                DestroyButtonByClick(hit.collider);
-            }
+                hit.collider.GetComponent<ButtonController>().DestructionByClick();
             else
-            {
                 MissClick();
-            }
         }
     }
 
-    void DestroyButtonByClick(Collider2D buttonObj)
+    public void BackGraunAndScoreGoodAnim()
     {
-        buttonObj.GetComponent<ButtonController>().DestructionByClick();
         backGraundAnimator.SetTrigger("successfulClick");
         scoreAnimator.SetTrigger("scoreUp");
     }
 
-    void MissClick()
+    public void BackGraunAndScoreWorseAnim()
     {
-        CrossSpavnPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        CrossSpavnPosition.z = 0f;
-        Instantiate(cross, CrossSpavnPosition, Quaternion.identity);
         backGraundAnimator.SetTrigger("missClick");
         scoreAnimator.SetTrigger("scoreDown");
+    }
+
+    void MissClick()
+    {
+        CrossSpawnPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        CrossSpawnPosition.z = 0f;
+        Instantiate(cross, CrossSpawnPosition, Quaternion.identity);
+        BackGraunAndScoreWorseAnim();
         UpdateScore(-50);
         extraPoints = 0;
     }
 
     IEnumerator SpawnButtonInTine()
     {
-        yield return new WaitForSeconds(1);
-        while (true)
+        yield return new WaitForSeconds(2);
+        while (isGameContinue)
         {
             SpawnButton();
             yield return new WaitForSeconds(spawnWait);
         }
     }
 
-
     void SpawnButton()
     {
-        Vector2 spawnVector = new Vector2(Random.Range(spawnArea.xMin, spawnArea.xMax),
+        ButtonSpavnPosition.Set(Random.Range(spawnArea.xMin, spawnArea.xMax),
             Random.Range(spawnArea.yMin, spawnArea.yMax));
-        SetMinMaxSize(spawnVector);
+        SetMinMaxSize(ButtonSpavnPosition);
         int attemptToFind = 20;
         while (Physics2D.OverlapAreaAll(min, max).Length > 1 && (attemptToFind > 0))
         {
-            spawnVector.Set(Random.Range(spawnArea.xMin, spawnArea.xMax),
+            ButtonSpavnPosition.Set(Random.Range(spawnArea.xMin, spawnArea.xMax),
                 Random.Range(spawnArea.yMin, spawnArea.yMax));
-            SetMinMaxSize(spawnVector);
+            SetMinMaxSize(ButtonSpavnPosition);
             attemptToFind--;
         }
 
         if (Physics2D.OverlapAreaAll(min, max).Length == 1)
         {
-            Instantiate(button, spawnVector, Quaternion.identity);
+            var btn = Instantiate(button, ButtonSpavnPosition, Quaternion.identity);
+            btn.GameController = this;
         }
     }
 
@@ -140,17 +141,30 @@ public class GameController : MonoBehaviour
 
     public void UpdateScore(int plusScore)
     {
-        if (plusScore < 0)
+        if (isGameContinue)
         {
-            scoreCounter += plusScore - itemCounter * 10;
-            extraPoints = 0;
-            ExtraPointsTextUpdate();
+            if (plusScore < 0)
+            {
+                scoreCounter += plusScore - itemCounter * 10;
+                if (extraPoints != 0)
+                {
+                    extraPoints = 0;
+                    ExtraPointsTextUpdate();
+                }
+            }
+            else
+            {
+                scoreCounter += plusScore + extraPoints;
+                extraPoints += 50;
+                ExtraPointsTextUpdate();
+            }
         }
-        else
+
+        if (scoreCounter <= 0)
         {
-            scoreCounter += plusScore + extraPoints;
-            extraPoints += 50;
-            ExtraPointsTextUpdate();
+            scoreText.text = "0";
+            GameOver();
+            return;
         }
 
         scoreText.text = scoreCounter.ToString();
@@ -159,8 +173,22 @@ public class GameController : MonoBehaviour
         {
             SaveScore.maxScore = scoreCounter;
         }
+    }
 
-        if (scoreCounter <= -1)
+    void GameOver()
+    {
+        isGameContinue = false;
+        StartCoroutine(vaitBeforeGameOver());
+    }
+
+    IEnumerator vaitBeforeGameOver()
+    {
+        yield return new WaitForSeconds(3);
+        if (SaveScore.maxScore >= 80000)
+        {
+            sceneChanger.GetComponent<SceneChanger>().GoToScene("Win_screen");
+        }
+        else
         {
             sceneChanger.GetComponent<SceneChanger>().GoToScene("End_menu");
         }
@@ -169,10 +197,9 @@ public class GameController : MonoBehaviour
     public void incremtntSummOfButtons()
     {
         itemCounter++;
-
         if (spawnWait > minSpawnWait)
         {
-            spawnWait -= accelerationOfSpawnWait;
+            spawnWait -= accelerationOfSpawnWait / itemCounter;
         }
     }
 

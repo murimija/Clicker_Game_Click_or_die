@@ -4,10 +4,8 @@ using UnityEngine.UI;
 public class ShowHighScore : MonoBehaviour
 {
     public Text highScoreText;
-
-    // Start is called before the first frame update
     void Start()
     {
-        highScoreText.text = "with score: " + SaveScore.maxScore.ToString();
+        highScoreText.text = SaveScore.maxScore.ToString();
     }
 }

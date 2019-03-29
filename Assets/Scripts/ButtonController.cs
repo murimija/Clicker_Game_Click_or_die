@@ -5,29 +5,20 @@ public class ButtonController : MonoBehaviour
     [SerializeField] private GameController gameController;
     [SerializeField] private GameObject destroyByClick;
     [SerializeField] private GameObject destroyByTime;
-    [SerializeField] private GameObject gameControllerObject;
 
-    void Start()
+    public GameController GameController
     {
-        gameControllerObject = GameObject.FindWithTag("GameController");
-        if (gameControllerObject != null)
-        {
-            gameController = gameControllerObject.GetComponent<GameController>();
-        }
-
-        if (gameController == null)
-        {
-            Debug.Log("Cannot find 'GameController' script");
-        }
+        set => gameController = value;
     }
-    
+
     public void DestructionByClick()
-    {        
+    {
         Destroy(this.gameObject);
         Instantiate(destroyByClick, GetComponent<Transform>().position, Quaternion.identity);
-        gameController.GetComponent<GameController>().ShakeCamera();
+        gameController.ShakeCamera();
         gameController.UpdateScore(50);
         gameController.incremtntSummOfButtons();
+        gameController.BackGraunAndScoreGoodAnim();
     }
 
     void DestructionByTime()
@@ -35,5 +26,6 @@ public class ButtonController : MonoBehaviour
         Destroy(this.gameObject);
         Instantiate(destroyByTime, GetComponent<Transform>().position, Quaternion.identity);
         gameController.UpdateScore(-100);
+        gameController.BackGraunAndScoreWorseAnim();
     }
 }
