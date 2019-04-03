@@ -1,19 +1,15 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Timers;
+﻿using System;
+using System.Collections;
 using UnityEngine;
-using UnityEngine.Playables;
-using UnityEngine.Serialization;
-using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public static class SaveScore
 {
     public static int maxScore;
 }
 
-[System.Serializable]
+[Serializable]
 public class SpawnArea
 {
     public float xMax, xMin, yMax, yMin;
@@ -23,78 +19,89 @@ public class GameController : MonoBehaviour
 {
     [SerializeField] private ButtonController button;
     [SerializeField] private GameObject cross;
-    [SerializeField] private Image backGraund;
+    private Vector3 CrossSpawnPosition;
+    
+    [SerializeField] private Image backGround;
     [SerializeField] private SpawnArea spawnArea;
     [SerializeField] private float spawnWait;
     [SerializeField] private float accelerationOfSpawnWait;
     [SerializeField] private float minSpawnWait;
-    [SerializeField] public Text scoreText;
-    [SerializeField] public Text hitText;
-
+    [SerializeField] private Text scoreText;
+    
     private float buttonHalfSize;
     private Vector2 max;
     private Vector2 min;
-    private Vector2 ButtonSpavnPosition;
+    private Vector2 ButtonSpawnPosition = Vector2.zero;
 
     private int scoreCounter = 200;
     private int itemCounter;
 
-    public Camera mainCamera;
+    [SerializeField] private Camera mainCamera;
+    
+    [SerializeField] private GameObject sceneChanger;
+    
 
-    public GameObject sceneChanger;
-    private Vector3 CrossSpawnPosition;
-
-    private Animator backGraundAnimator;
+    private Animator backGroundAnimator;
     private Animator scoreAnimator;
-
+    
+    [SerializeField] private Text extraPointsText;
+    private Animator extraPointsTextAnimator;
     private int extraPoints;
     private bool isGameContinue = true;
+    
+    private static readonly int Shake = Animator.StringToHash("shake");
+    private static readonly int Update1 = Animator.StringToHash("update");
+    private static readonly int SuccessfulClick = Animator.StringToHash("successfulClick");
+    private static readonly int ScoreUp = Animator.StringToHash("scoreUp");
+    private static readonly int ScoreDown = Animator.StringToHash("scoreDown");
+    private static readonly int Click = Animator.StringToHash("missClick");
 
-    void Start()
+    private readonly Collider2D[] resOfOverlapAreaNonAlloc = new Collider2D[2];
+
+    private void Start()
     {
-        buttonHalfSize = (button.GetComponent<CircleCollider2D>().radius) / 2f;
+        buttonHalfSize = button.GetComponent<CircleCollider2D>().radius / 2f;
         scoreText.text = scoreCounter.ToString();
         scoreAnimator = scoreText.GetComponent<Animator>();
-        backGraundAnimator = backGraund.GetComponent<Animator>();
+        backGroundAnimator = backGround.GetComponent<Animator>();
+        extraPointsTextAnimator = extraPointsText.GetComponent<Animator>();
         StartCoroutine(SpawnButtonInTine());
     }
 
-    void Update()
+    private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+        if (!Input.GetMouseButtonDown(0)) return;
+        var hit = Physics2D.Raycast(mainCamera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
-            if (hit.collider.tag == "ClickButton")
-                hit.collider.GetComponent<ButtonController>().DestructionByClick();
-            else
-                MissClick();
-        }
+        if (hit.collider.CompareTag("ClickButton"))
+            hit.collider.GetComponent<ButtonController>().DestructionByClick();
+        else
+            MissClick();
     }
 
-    public void BackGraunAndScoreGoodAnim()
+    public void BackGroundAndScoreGoodAnim()
     {
-        backGraundAnimator.SetTrigger("successfulClick");
-        scoreAnimator.SetTrigger("scoreUp");
+        backGroundAnimator.SetTrigger(SuccessfulClick);
+        scoreAnimator.SetTrigger(ScoreUp);
     }
 
-    public void BackGraunAndScoreWorseAnim()
+    public void BackGroundAndScoreWorseAnim()
     {
-        backGraundAnimator.SetTrigger("missClick");
-        scoreAnimator.SetTrigger("scoreDown");
+        backGroundAnimator.SetTrigger(Click);
+        scoreAnimator.SetTrigger(ScoreDown);
     }
 
-    void MissClick()
+    private void MissClick()
     {
         CrossSpawnPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         CrossSpawnPosition.z = 0f;
         Instantiate(cross, CrossSpawnPosition, Quaternion.identity);
-        BackGraunAndScoreWorseAnim();
+        BackGroundAndScoreWorseAnim();
         UpdateScore(-50);
         extraPoints = 0;
     }
 
-    IEnumerator SpawnButtonInTine()
+    private IEnumerator SpawnButtonInTine()
     {
         yield return new WaitForSeconds(2);
         while (isGameContinue)
@@ -104,28 +111,26 @@ public class GameController : MonoBehaviour
         }
     }
 
-    void SpawnButton()
+    private void SpawnButton()
     {
-        ButtonSpavnPosition.Set(Random.Range(spawnArea.xMin, spawnArea.xMax),
+        ButtonSpawnPosition.Set(Random.Range(spawnArea.xMin, spawnArea.xMax),
             Random.Range(spawnArea.yMin, spawnArea.yMax));
-        SetMinMaxSize(ButtonSpavnPosition);
-        int attemptToFind = 20;
-        while (Physics2D.OverlapAreaAll(min, max).Length > 1 && (attemptToFind > 0))
+        SetMinMaxSize(ButtonSpawnPosition);
+        var attemptToFind = 20;
+        while (Physics2D.OverlapAreaNonAlloc(min, max, resOfOverlapAreaNonAlloc) > 1 && attemptToFind > 0)
         {
-            ButtonSpavnPosition.Set(Random.Range(spawnArea.xMin, spawnArea.xMax),
+            ButtonSpawnPosition.Set(Random.Range(spawnArea.xMin, spawnArea.xMax),
                 Random.Range(spawnArea.yMin, spawnArea.yMax));
-            SetMinMaxSize(ButtonSpavnPosition);
+            SetMinMaxSize(ButtonSpawnPosition);
             attemptToFind--;
         }
 
-        if (Physics2D.OverlapAreaAll(min, max).Length == 1)
-        {
-            var btn = Instantiate(button, ButtonSpavnPosition, Quaternion.identity);
-            btn.GameController = this;
-        }
+        if (Physics2D.OverlapAreaNonAlloc(min, max, resOfOverlapAreaNonAlloc) != 1) return;
+        var btn = Instantiate(button, ButtonSpawnPosition, Quaternion.identity);
+        btn.GameController = this;
     }
 
-    void SetMinMaxSize(Vector2 vector)
+    private void SetMinMaxSize(Vector2 vector)
     {
         max.x = vector.x + buttonHalfSize;
         max.y = vector.y + buttonHalfSize;
@@ -133,10 +138,10 @@ public class GameController : MonoBehaviour
         min.y = vector.y - buttonHalfSize;
     }
 
-    void ExtraPointsTextUpdate()
+    private void ExtraPointsTextUpdate()
     {
-        hitText.GetComponent<Animator>().SetTrigger("updete");
-        hitText.text = "Extra\npoints\n<size=50>" + extraPoints + "</size>";
+        extraPointsTextAnimator.SetTrigger(Update1);
+        extraPointsText.text = "Extra\npoints\n<size=50>" + extraPoints + "</size>";
     }
 
     public void UpdateScore(int plusScore)
@@ -175,26 +180,19 @@ public class GameController : MonoBehaviour
         }
     }
 
-    void GameOver()
+    private void GameOver()
     {
         isGameContinue = false;
-        StartCoroutine(vaitBeforeGameOver());
+        StartCoroutine(waitBeforeGameOver());
     }
 
-    IEnumerator vaitBeforeGameOver()
+    private IEnumerator waitBeforeGameOver()
     {
         yield return new WaitForSeconds(3);
-        if (SaveScore.maxScore >= 80000)
-        {
-            sceneChanger.GetComponent<SceneChanger>().GoToScene("Win_screen");
-        }
-        else
-        {
-            sceneChanger.GetComponent<SceneChanger>().GoToScene("End_menu");
-        }
+        sceneChanger.GetComponent<SceneChanger>().GoToScene(SaveScore.maxScore >= 80000 ? "Win_screen" : "End_menu");
     }
 
-    public void incremtntSummOfButtons()
+    public void incrementSumOfButtons()
     {
         itemCounter++;
         if (spawnWait > minSpawnWait)
@@ -205,6 +203,6 @@ public class GameController : MonoBehaviour
 
     public void ShakeCamera()
     {
-        mainCamera.GetComponent<Animator>().SetTrigger("shake");
+        mainCamera.GetComponent<Animator>().SetTrigger(Shake);
     }
 }

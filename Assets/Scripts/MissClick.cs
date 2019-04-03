@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class MissClick : MonoBehaviour
 {
@@ -9,7 +7,7 @@ public class MissClick : MonoBehaviour
     private void OnMouseDown()
     {
         Debug.Log("1");
-        Vector3 spawnVector = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        var spawnVector = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         spawnVector.z = 0f;
         Instantiate(cross, spawnVector, Quaternion.identity);
     }

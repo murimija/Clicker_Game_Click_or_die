@@ -466,7 +466,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   button: {fileID: 6054569009043744903, guid: 7819de257f558bb48827823a945e4372, type: 3}
   cross: {fileID: 7541139364263208893, guid: 7f9122531e43bbb47b09f32e717086ac, type: 3}
-  backGraund: {fileID: 95805032}
+  backGround: {fileID: 95805032}
   spawnArea:
     xMax: 4.8
     xMin: -4.8
@@ -476,9 +476,9 @@ MonoBehaviour:
   accelerationOfSpawnWait: 0.15
   minSpawnWait: 0.2
   scoreText: {fileID: 1593624411}
-  hitText: {fileID: 1912572738}
   mainCamera: {fileID: 534669904}
   sceneChanger: {fileID: 662897485}
+  extraPointsText: {fileID: 1912572738}
 --- !u!1 &1593624409
 GameObject:
   m_ObjectHideFlags: 0

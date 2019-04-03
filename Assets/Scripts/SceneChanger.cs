@@ -1,18 +1,20 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class SceneChanger : MonoBehaviour
 {
     [SerializeField] private Animator curtainForScenesTransition;
-    private String nextScene;
+    private string nextScene;
+    private static readonly int ChangeScene = Animator.StringToHash("ChangeScene");
+
     public void GoToScene(string nameOfScene)
     {
         nextScene = nameOfScene;
-        curtainForScenesTransition.SetTrigger("ChangeScene");      
+        curtainForScenesTransition.SetTrigger(ChangeScene);      
     }
 
-    public void onTransitinComplite()
+    // ReSharper disable once UnusedMember.Global
+    public void onTransitionComplete()
     {
         SceneManager.LoadScene(nextScene);
     }

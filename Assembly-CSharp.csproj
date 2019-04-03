@@ -63,7 +63,6 @@
     <Compile Include="Assets\Scripts\MissClick.cs" />
     <Compile Include="Assets\Scripts\SceneChanger.cs" />
     <Compile Include="Assets\Scripts\ShowHighScore.cs" />
-    <Compile Include="Assets\Scripts\test.cs" />
     <Reference Include="Unity.TextMeshPro">
       <HintPath>C:/Users/123/Documents/GitHub/Click_or_die_game/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
     </Reference>

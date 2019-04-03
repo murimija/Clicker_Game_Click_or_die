@@ -13,19 +13,20 @@ public class ButtonController : MonoBehaviour
 
     public void DestructionByClick()
     {
-        Destroy(this.gameObject);
+        Destroy(gameObject);
         Instantiate(destroyByClick, GetComponent<Transform>().position, Quaternion.identity);
         gameController.ShakeCamera();
         gameController.UpdateScore(50);
-        gameController.incremtntSummOfButtons();
-        gameController.BackGraunAndScoreGoodAnim();
+        gameController.incrementSumOfButtons();
+        gameController.BackGroundAndScoreGoodAnim();
     }
 
-    void DestructionByTime()
+    // ReSharper disable once UnusedMember.Local
+    private void DestructionByTime()
     {
-        Destroy(this.gameObject);
-        Instantiate(destroyByTime, GetComponent<Transform>().position, Quaternion.identity);
+        Destroy(gameObject);
+        Instantiate(destroyByTime, transform.position, Quaternion.identity);
         gameController.UpdateScore(-100);
-        gameController.BackGraunAndScoreWorseAnim();
+        gameController.BackGroundAndScoreWorseAnim();
     }
 }
